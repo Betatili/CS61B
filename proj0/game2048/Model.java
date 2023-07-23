@@ -109,18 +109,52 @@ public class Model extends Observable {
     public boolean tilt(Side side) {
         boolean changed;
         changed = false;
-
+        board.setViewingPerspective (side);
+        for (int col = 0; col < board.size(); col ++) {
+            for (int row = board.size() - 1; row > 0; row --) {
+                Tile tileCurrent = board.tile(col, row);
+                if (tileCurrent == null) {
+                    Tile tileBelow = LooktileBelow(col, row, board);
+                    if (tileBelow != null) {
+                        board.move(col, row, tileBelow);
+                        changed = true;
+                        row += 1;
+                    }
+                }
+                else {
+                    Tile tileBelow = LooktileBelow(col, row, board);
+                    if (tileBelow != null) {
+                        if (tileBelow.value() == tileCurrent.value()) {
+                            board.move(col, row, tileBelow);
+                            changed = true;
+                            score += board.tile(col, row).value();
+                        }
+                        else {
+                            board.move(col, row -1, tileBelow);
+                            changed =true;
+                        }
+                    }
+                }
+            }
+        }
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        board.setViewingPerspective (Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
-
+    public static Tile LooktileBelow(int col, int startrow, Board board){
+        for (int i = startrow -1; i >= 0; i --) {
+            if (board.tile(col, i) != null) {
+                return board.tile(col, i);
+            }
+        }
+        return null;
+    };
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
      */
@@ -138,6 +172,12 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        int bsize = b.size();
+        for (int col = 0; col < bsize; col += 1) {
+            for (int row = 0; row < bsize; row += 1) {
+                if (b.tile(col, row) == null) {return true;}
+            }
+        }
         return false;
     }
 
@@ -147,7 +187,14 @@ public class Model extends Observable {
      * given a Tile object t, we get its value with t.value().
      */
     public static boolean maxTileExists(Board b) {
-        // TODO: Fill in this function.
+        int bsize = b.size();
+        for (int col = 0; col < bsize; col += 1) {
+            for (int row = 0; row < bsize; row +=1) {
+                if (b.tile(col, row) != null && b.tile(col, row).value() == MAX_PIECE) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +206,29 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        int bsize = b.size();
+        if (maxTileExists(b)) {
+            return true;
+        }
+        else if (emptySpaceExists(b)){
+            return true;
+        }
+        else {
+            for (int col = 0; col < bsize; col += 1) {
+                for (int row = 0; row + 1 < bsize; row += 1) {
+                    if (b.tile(col, row).value() == b.tile(col, row + 1).value()){
+                        return true;
+                    }
+                }
+            }
+            for (int row = 0; row < bsize; row += 1) {
+                for (int col = 0; col + 1 < bsize; col += 1) {
+                    if (b.tile(col, row).value() == b.tile(col + 1, row).value()){
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
